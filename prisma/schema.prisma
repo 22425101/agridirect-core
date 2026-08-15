@@ -1,0 +1,65 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  FARMER
+  BUYER
+  DRIVER
+  ADMIN
+}
+
+enum ListingStatus {
+  ACTIVE
+  LOCKED
+  FULFILLED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(FARMER)
+  phone        String?
+  createdAt    DateTime  @default(now())
+  listings     Listing[]
+  bids         Bid[]
+}
+
+model Listing {
+  id           String        @id @default(uuid())
+  farmerId     String
+  farmer       User          @relation(fields: [farmerId], references: [id])
+  cropType     String
+  quantityKg   Float
+  minPrice     Float
+  location     String
+  status       ListingStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  bids         Bid[]
+}
+
+model Bid {
+  id             String    @id @default(uuid())
+  listingId      String
+  listing        Listing   @relation(fields: [listingId], references: [id])
+  buyerId        String
+  buyer          User      @relation(fields: [buyerId], references: [id])
+  bidAmountPerKg Float
+  status         BidStatus @default(PENDING)
+  createdAt      DateTime  @default(now())
+}
